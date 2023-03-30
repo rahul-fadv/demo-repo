@@ -6,7 +6,7 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+#     branches: [ "main" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -59,8 +59,8 @@ jobs:
           secret: ${{ github.TOKEN }}
           approvers: rahul-fadv
           minimum-approvals: 1
-          issue-title: "Deploying v1.3.5 to prod from staging"
-          issue-body: "Please approve or deny the deployment of version v1.3.5."
+          issue-title: "Requesting ${{ inputs.Role }} on ${{ inputs.workload }} for ${{ inputs.userName }}"
+          issue-body: "Please approve or deny the request of ${{ inputs.userName }} for ${{ inputs.Role }} on ${{ inputs.workload }}"
           exclude-workflow-initiator-as-approver: false
           additional-approved-words: ''
           additional-denied-words: ''
