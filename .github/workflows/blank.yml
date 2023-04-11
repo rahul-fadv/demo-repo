@@ -61,7 +61,7 @@ jobs:
 
       - name: 'Trigger Power Automate Workflow'
         run: |
-          echo "{"userName": "${{ inputs.userName }}" }"
+          echo '{"userName": "${{ inputs.userName }}"",  "userEmail": "${{ inputs.userEmail }}", "subscription": "${{ inputs.workload }}", "resourceGroup": "${{ inputs.resourceGroup }}", "roleRequested": "${{ inputs.Role }}", "duration": "${{ inputs.Duration }}"}'
         
       - name: Run on Approval
         run: echo Assigning Role to user
