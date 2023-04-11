@@ -7,6 +7,9 @@ on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
 
   # Allows you to run this workflow manually from the Actions tab
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       userName:
@@ -58,7 +61,7 @@ jobs:
 
       - name: 'Trigger Power Automate Workflow'
         run: |
-          echo "{userName: ${{ inputs.userName }} }"
+          echo "{"userName": "${{ inputs.userName }}" }"
         
       - name: Run on Approval
         run: echo Assigning Role to user
