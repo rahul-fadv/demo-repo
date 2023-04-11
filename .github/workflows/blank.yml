@@ -57,8 +57,9 @@ jobs:
         run: echo EMAIl Send
 
       - name: 'Trigger Power Automate Workflow'
-        run: echo "curl 'https://prod-181.westus.logic.azure.com:443/workflows/aa1400860e384e4fbcdf163913cb4aae/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u6DrYAlrSdyc78oU5Fe8YV9JioseYfd5JagTBHylbk8' -d '{"userName": "'"${{ inputs.userName }}"'", "userEmail": "'"${{ inputs.userEmail }}"'", "subscription": "'"${{ inputs.workload }}"'", "resourceGroup": "'"${{ inputs.resourceGroup }}"'", "roleRequested": "'"${{ inputs.Role }}"'", "duration": "'"${{ inputs.Duration }}"'"}' -X POST -H "Content-Type: application/json""
-      
+        run: |
+          echo "{userName: ${{ inputs.userName }} }"
+        
       - name: Run on Approval
         run: echo Assigning Role to user
 
