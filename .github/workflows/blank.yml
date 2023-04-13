@@ -72,13 +72,13 @@ jobs:
       - name: Get Subscription ID
         id: get-subscription-name
         run: |
-          SUBSCRIPTION_NAME=(az account subscription show --id 21572cd9-737e-4c88-9cb8-539a49e6da51 --query displayName --output tsv)
+          SUBSCRIPTION_NAME=$(az account show --name 21572cd9-737e-4c88-9cb8-539a49e6da51 --query name --output tsv)
           echo "SUBSCRIPTION_NAME=$SUBSCRIPTION_NAME" >> $GITHUB_OUTPUT
 
       - name: Verify Resource Group Exists
         id: get-resource-group
         run: |
-          if [ $(az group exists --name $RESOURCEGROUPNAME --subscription 21572cd9-737e-4c88-9cb8-539a49e6da51 ) = true ];
+          if [ $(az group exists --name ${{ inputs.resourceGroup }} --subscription 21572cd9-737e-4c88-9cb8-539a49e6da51 ) = true ];
             then echo "${{ inputs.resourceGroup }} exists in ${{ steps.get-subscription-name.outputs.SUBSCRIPTION_NAME }} subscription"; 
           else 
             echo "${{ inputs.resourceGroup }} does not Exists in ${{ steps.get-subscription-name.outputs.SUBSCRIPTION_NAME }} subscription. Provide a valid Resource Group Name"
@@ -93,7 +93,7 @@ jobs:
           subscriptionId: 91384b1f-ff36-48d0-aa31-82a57fd91c05
           template: ./infra/infra-as-code/bicep/teams/user.bicep
           region: eastus2
-          parameters: userPrincipalName=${{ inputs.resourceGroup }}
+          parameters: userPrincipalName=${{ inputs.userEmail }}
           failOnStdErr: false
 
       - name: "Trigger Power Automate Workflow"
