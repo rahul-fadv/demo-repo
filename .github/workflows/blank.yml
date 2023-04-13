@@ -4,12 +4,6 @@ name: Request Access
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-
-  # Allows you to run this workflow manually from the Actions tab
-#  push:
-#    branches:
-#      - main
   workflow_dispatch:
     inputs:
       userName:
@@ -43,26 +37,65 @@ on:
           - prod
           - nonprod
 
+permissions:
+  id-token: write
+  contents: read
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    environment: fareimagine
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - name: Checkout out infra repo
+        uses: actions/checkout@v3
+        with:
+          repository: FA-Switch-Platform/Infra
+          ref: main
+          path: infra
+          token: ${{ secrets.GH_PAT }}
 
-      # Runs a single command using the runners shell
-      - name: Send Email Notification
-        run: echo EMAIl Send
+      - name: "Az CLI login"
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+          enable-AzPSSession: true
 
-      - name: 'Trigger Power Automate Workflow'
+      - name: Get Subscription ID
+        id: get-subscription-show
         run: |
-          curl 'https://prod-181.westus.logic.azure.com:443/workflows/aa1400860e384e4fbcdf163913cb4aae/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u6DrYAlrSdyc78oU5Fe8YV9JioseYfd5JagTBHylbk8' -d '{"userName": "${{ inputs.userName }}",  "userEmail": "${{ inputs.userEmail }}", "subscription": "${{ inputs.workload }}", "resourceGroup": "${{ inputs.resourceGroup }}", "roleRequested": "${{ inputs.Role }}", "duration": "${{ inputs.Duration }}"}' -X POST -H "Content-Type: application/json"
-        
-      - name: Run on Approval
-        run: echo Assigning Role to user
+         az account show
 
+      - name: Get Subscription ID
+        id: get-subscription-name
+        run: |
+          SUBSCRIPTION_NAME=(az account subscription show --id 21572cd9-737e-4c88-9cb8-539a49e6da51 --query displayName --output tsv)
+          echo "SUBSCRIPTION_NAME=$SUBSCRIPTION_NAME" >> $GITHUB_OUTPUT
+
+      - name: Verify Resource Group Exists
+        id: get-resource-group
+        run: |
+          if [ $(az group exists --name $RESOURCEGROUPNAME --subscription 21572cd9-737e-4c88-9cb8-539a49e6da51 ) = true ];
+            then echo "${{ inputs.resourceGroup }} exists in ${{ steps.get-subscription-name.outputs.SUBSCRIPTION_NAME }} subscription"; 
+          else 
+            echo "${{ inputs.resourceGroup }} does not Exists in ${{ steps.get-subscription-name.outputs.SUBSCRIPTION_NAME }} subscription. Provide a valid Resource Group Name"
+            exit 1;
+          fi
+
+      - uses: azure/arm-deploy@v1
+        name: Verify User Exists in AD
+        with:
+          deploymentName: verify-user-exists
+          resourceGroupName: rg-teams-access-poc
+          subscriptionId: 91384b1f-ff36-48d0-aa31-82a57fd91c05
+          template: ./infra/infra-as-code/bicep/teams/user.bicep
+          region: eastus2
+          parameters: userPrincipalName=${{ inputs.resourceGroup }}
+          failOnStdErr: false
+
+      - name: "Trigger Power Automate Workflow"
+        run: |
+          curl 'https://prod-181.westus.logic.azure.com:443/workflows/aa1400860e384e4fbcdf163913cb4aae/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u6DrYAlrSdyc78oU5Fe8YV9JioseYfd5JagTBHylbk8' -d '{"userName": "${{ inputs.userName }}",  "userEmail": "${{ inputs.userEmail }}", "subscription": "${{ steps.get-subscription-name.outputs.SUBSCRIPTION_NAME }}", "resourceGroup": "${{ inputs.resourceGroup }}", "roleRequested": "${{ inputs.Role }}", "duration": "${{ inputs.Duration }}"}' -X POST -H "Content-Type: application/json"
