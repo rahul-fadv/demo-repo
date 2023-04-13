@@ -6,10 +6,6 @@ name: Request Access
 on:
   workflow_dispatch:
     inputs:
-      userName:
-        type: string
-        required: true
-        description: UserName of the Switch Tenant
       userEmail:
         type: string
         required: true
@@ -27,6 +23,10 @@ on:
           - Contributor
       resourceGroup:
         description: RG Name
+        required: true
+        type: string
+      purpose:
+        description: Purpose
         required: true
         type: string
       workload:
@@ -48,6 +48,12 @@ jobs:
     environment: fareimagine
 
     steps:
+      - name: Get Current UTC Time
+        id: get-utc-time
+        run: |
+          REQUESTED_TIME=$(date -u +"%m/%d/%y %T %Z")
+          echo "REQUESTED_TIME=$REQUESTED_TIME" >> $GITHUB_OUTPUT
+
       - name: Checkout out infra repo
         uses: actions/checkout@v3
         with:
@@ -90,6 +96,7 @@ jobs:
           fi
 
       - uses: azure/arm-deploy@v1
+        id: deploy
         name: Verify User Exists in AD
         with:
           deploymentName: verify-user-exists
@@ -102,4 +109,4 @@ jobs:
 
       - name: "Trigger Power Automate Workflow"
         run: |
-          curl 'https://prod-181.westus.logic.azure.com:443/workflows/aa1400860e384e4fbcdf163913cb4aae/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u6DrYAlrSdyc78oU5Fe8YV9JioseYfd5JagTBHylbk8' -d '{"userName": "${{ inputs.userName }}",  "userEmail": "${{ inputs.userEmail }}", "subscription": "${{ steps.get-subscription-name.outputs.SUBSCRIPTION_NAME }}", "resourceGroup": "${{ inputs.resourceGroup }}", "roleRequested": "${{ inputs.Role }}", "duration": "${{ inputs.Duration }}"}' -X POST -H "Content-Type: application/json"
+          curl 'https://prod-181.westus.logic.azure.com:443/workflows/aa1400860e384e4fbcdf163913cb4aae/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=u6DrYAlrSdyc78oU5Fe8YV9JioseYfd5JagTBHylbk8' -d '{"userName": "${{ steps.deploy.outputs.displayName }}",  "userEmail": "${{ inputs.userEmail }}", "subscription": "${{ steps.get-subscription-name.outputs.SUBSCRIPTION_NAME }}", "resourceGroup": "${{ inputs.resourceGroup }}", "roleRequested": "${{ inputs.Role }}", "duration": "${{ inputs.Duration }}", "requestTime": "${{ steps.get-utc-time.outputs.REQUESTED_TIME }}", , "purpose": "${{ inputs.purpose }}"}' -X POST -H "Content-Type: application/json"
