@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: FA-Switch-Platform/Infra
-          ref: main
+          ref: teams-access
           path: infra
           token: ${{ secrets.GH_PAT }}
 
@@ -68,6 +68,10 @@ jobs:
         id: get-subscription-show
         run: |
          az account show
+
+      - name: ls
+        run: |
+          ls
 
       - name: Get Subscription ID
         id: get-subscription-name
