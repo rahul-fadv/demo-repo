@@ -95,7 +95,7 @@ jobs:
           deploymentName: verify-user-exists
           resourceGroupName: rg-teams-access-poc
           subscriptionId: 91384b1f-ff36-48d0-aa31-82a57fd91c05
-          template: ./infra/infra-as-code/bicep/teams/user.bicep
+          template: ./infra/infra-as-code/teams/user.bicep
           region: eastus2
           parameters: userPrincipalName=${{ inputs.userEmail }}
           failOnStdErr: false
