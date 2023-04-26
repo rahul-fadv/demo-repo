@@ -11,6 +11,8 @@ on:
     types:
       - opened
       - edited
+    paths:
+      - dns/*
 
 permissions:
   id-token: write
