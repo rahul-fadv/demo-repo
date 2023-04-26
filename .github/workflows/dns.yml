@@ -10,6 +10,7 @@ on:
   pull_request:
     types:
       - opened
+      - edited
 
 permissions:
   id-token: write
