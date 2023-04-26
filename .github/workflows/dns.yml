@@ -10,8 +10,6 @@ on:
   pull_request:
     types:
       - opened
-    paths:
-      - dns/*
 
 permissions:
   id-token: write
